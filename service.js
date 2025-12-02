@@ -4,7 +4,7 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-// CONFIGURATION (Injected by IBM Cloud)
+// CONFIGURATION (Injected by render)
 const SERVICE_NAME = process.env.SERVICE_NAME || "unknown-service";
 const REGISTRY_URL = process.env.REGISTRY_URL || "http://localhost:8080";
 // We need to know OUR own URL to tell the registry
@@ -101,3 +101,4 @@ app.listen(PORT, () => {
   console.log(`${SERVICE_NAME} running on port ${PORT}`);
   registerSelf();
 });
+
