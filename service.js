@@ -1,85 +1,95 @@
-const express = require('express');
-const cors = require('cors');
-const axios = require('axios');
+// service.js
+const express = require("express");
+const cors = require("cors");
+const axios = require("axios");
+
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 // CONFIGURATION (Injected by render)
 const SERVICE_NAME = process.env.SERVICE_NAME || "unknown-service";
 const REGISTRY_URL = process.env.REGISTRY_URL || "http://localhost:8080";
-// We need to know OUR own URL to tell the registry
 const MY_URL = process.env.MY_URL || `http://localhost:${PORT}`;
 
 app.use(cors());
 app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.send(`${SERVICE_NAME} is running`);
+});
 
 // DATA STORES
 const db = {
   profile: {},
   tickets: [],
   posts: [],
-  appointments: {}, 
+  appointments: {},
   counseling: { active: false }
 };
 
 // --- LOGIC SWITCHER ---
 
-if (SERVICE_NAME === 'profile') {
-  app.get('/profile/:user', (req, res) => {
+if (SERVICE_NAME === "profile") {
+  app.get("/profile/:user", (req, res) => {
     const p = db.profile[req.params.user] || { name: "", email: "", bio: "" };
     res.json(p);
   });
-  app.post('/profile/:user', (req, res) => {
+  app.post("/profile/:user", (req, res) => {
     db.profile[req.params.user] = req.body;
     res.json({ success: true });
   });
 }
 
-if (SERVICE_NAME === 'tickets') {
-  app.get('/tickets', (req, res) => res.json(db.tickets));
-  app.post('/tickets', (req, res) => {
-    const t = { ...req.body, id: Math.random().toString(36).substr(2, 5).toUpperCase(), status: 'OPEN' };
+if (SERVICE_NAME === "tickets") {
+  app.get("/tickets", (req, res) => res.json(db.tickets));
+
+  app.post("/tickets", (req, res) => {
+    const t = {
+      ...req.body,
+      id: Math.random().toString(36).substr(2, 5).toUpperCase(),
+      status: "OPEN"
+    };
     db.tickets.push(t);
     res.json(t);
   });
-  app.delete('/tickets/:id', (req, res) => {
-    const { id } = req.params;
-    // Filter out the ticket with the matching ID
-    const initialLength = db.tickets.length;
-    db.tickets = db.tickets.filter(t => t.id !== id);
-    
-    if (db.tickets.length < initialLength) {
-        res.json({ success: true, message: "Deleted" });
-    } else {
-        res.status(404).json({ error: "Ticket not found" });
-    }
-  });
-  app.post('/tickets/:id/pickup', (req, res) => {
-    const t = db.tickets.find(x => x.id === req.params.id);
+
+  app.post("/tickets/:id/pickup", (req, res) => {
+    const t = db.tickets.find((x) => x.id === req.params.id);
     if (t) {
-      t.status = 'PICKED_UP';
+      t.status = "PICKED_UP";
       t.counselorName = req.body.counselorName;
       res.json(t);
     } else {
       res.status(404).send("Not found");
     }
   });
+
+  // 🔥 NEW: delete ticket endpoint
+  app.delete("/tickets/:id", (req, res) => {
+    const { id } = req.params;
+    const idx = db.tickets.findIndex((t) => t.id === id);
+    if (idx === -1) {
+      return res.status(404).send("Not found");
+    }
+    const [removed] = db.tickets.splice(idx, 1);
+    res.json(removed);
+  });
 }
 
-if (SERVICE_NAME === 'board') {
-  app.get('/posts', (req, res) => res.json(db.posts));
-  app.post('/posts', (req, res) => {
+if (SERVICE_NAME === "board") {
+  app.get("/posts", (req, res) => res.json(db.posts));
+  app.post("/posts", (req, res) => {
     const p = { ...req.body, id: Date.now().toString() };
     db.posts.unshift(p);
     res.json(p);
   });
 }
 
-if (SERVICE_NAME === 'appointments') {
-  app.get('/appointments/:ticketId', (req, res) => {
+if (SERVICE_NAME === "appointments") {
+  app.get("/appointments/:ticketId", (req, res) => {
     res.json(db.appointments[req.params.ticketId] || null);
   });
-  app.post('/appointments', (req, res) => {
+  app.post("/appointments", (req, res) => {
     const { ticketId, studentSlot, hasVisited } = req.body;
     const existing = db.appointments[ticketId] || {};
     db.appointments[ticketId] = { ...existing, ticketId, studentSlot, hasVisited };
@@ -87,13 +97,15 @@ if (SERVICE_NAME === 'appointments') {
   });
 }
 
-if (SERVICE_NAME === 'counseling') {
-  app.get('/status', (req, res) => res.json(db.counseling));
-  app.post('/toggle', (req, res) => {
+if (SERVICE_NAME === "counseling") {
+  app.get("/status", (req, res) => res.json(db.counseling));
+  app.post("/toggle", (req, res) => {
     db.counseling.active = !db.counseling.active;
     res.json(db.counseling);
   });
 }
+
+// --- SELF-REGISTRATION ---
 
 const registerSelf = async () => {
   console.log(`[${SERVICE_NAME}] Attempting to register with ${REGISTRY_URL}...`);
@@ -113,4 +125,3 @@ app.listen(PORT, () => {
   console.log(`${SERVICE_NAME} running on port ${PORT}`);
   registerSelf();
 });
-
