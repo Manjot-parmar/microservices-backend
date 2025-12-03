@@ -13,32 +13,32 @@ app.use(express.json());
 let services = {
   profile: {
     url: 'https://s1-profile.onrender.com',
-    status: 'UP',
+    status: 'DOWN',
     lastSeen: new Date()
   },
   tickets: {
     url: 'https://s2-tickets.onrender.com',
-    status: 'UP',
+    status: 'DOWN',
     lastSeen: new Date()
   },
   board: {
     url: 'https://s3-board.onrender.com',
-    status: 'UP',
+    status: 'DOWN',
     lastSeen: new Date()
   },
   appointments: {
     url: 'https://s4-appointments.onrender.com',
-    status: 'UP',
+    status: 'DOWN',
     lastSeen: new Date()
   },
   counseling: {
     url: 'https://s5-counseling.onrender.com',
-    status: 'UP',
+    status: 'DOWN',
     lastSeen: new Date()
   }
 };
 
-// 1. DISCOVERY: frontend asks "what services exist?"
+// 1. DISCOVERY: 
 app.get('/discover', (req, res) => {
   res.json(services);
 });
@@ -61,7 +61,7 @@ app.post('/register', (req, res) => {
   res.send('Registered');
 });
 
-// 3. ADMIN: toggle a service UP or DOWN (used by your frontend admin panel)
+// 3. ADMIN: toggle a service UP or DOWN
 app.post('/admin/toggle', (req, res) => {
   const { name } = req.body;
   const svc = services[name];
@@ -78,3 +78,4 @@ app.post('/admin/toggle', (req, res) => {
 app.listen(PORT, () => {
   console.log(`S0 Registry running on port ${PORT}`);
 });
+
