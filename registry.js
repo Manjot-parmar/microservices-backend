@@ -1,39 +1,78 @@
+// reg.js
 const express = require('express');
 const cors = require('cors');
+
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json());
 
-// STORE: Keeps track of services { "tickets": { url: "...", status: "UP" } }
-let services = {};
+// STATIC SERVICE MAP
+// Pre-populate with all known services so /discover is never {}.
+let services = {
+  profile: {
+    url: 'https://s1-profile.onrender.com',
+    status: 'UP',
+    lastSeen: new Date()
+  },
+  tickets: {
+    url: 'https://s2-tickets.onrender.com',
+    status: 'UP',
+    lastSeen: new Date()
+  },
+  board: {
+    url: 'https://s3-board.onrender.com',
+    status: 'UP',
+    lastSeen: new Date()
+  },
+  appointments: {
+    url: 'https://s4-appointments.onrender.com',
+    status: 'UP',
+    lastSeen: new Date()
+  },
+  counseling: {
+    url: 'https://s5-counseling.onrender.com',
+    status: 'UP',
+    lastSeen: new Date()
+  }
+};
 
-// 1. DISCOVERY: Frontend asks "Where are the services?"
+// 1. DISCOVERY: frontend asks "what services exist?"
 app.get('/discover', (req, res) => {
   res.json(services);
 });
 
-// 2. REGISTRATION: Services call this to say "I am here!"
+// 2. REGISTRATION:
 app.post('/register', (req, res) => {
   const { name, url } = req.body;
-  if (!name || !url) return res.status(400).send("Missing info");
-  
-  services[name] = { url, status: 'UP', lastSeen: new Date() };
+  if (!name || !url) {
+    return res.status(400).send('Missing info');
+  }
+
+  services[name] = {
+    ...(services[name] || {}),
+    url,
+    status: 'UP',
+    lastSeen: new Date()
+  };
+
   console.log(`[REGISTRY] Registered service: ${name} at ${url}`);
-  res.send("Registered");
+  res.send('Registered');
 });
 
-// 3. ADMIN: Toggle a service UP or DOWN
+// 3. ADMIN: toggle a service UP or DOWN (used by your frontend admin panel)
 app.post('/admin/toggle', (req, res) => {
   const { name } = req.body;
-  if (services[name]) {
-    services[name].status = services[name].status === 'UP' ? 'DOWN' : 'UP';
-    console.log(`[ADMIN] Toggled ${name} to ${services[name].status}`);
-    res.json(services[name]);
-  } else {
-    res.status(404).send("Service not found");
+  const svc = services[name];
+
+  if (!svc) {
+    return res.status(404).send('Service not found');
   }
+
+  svc.status = svc.status === 'UP' ? 'DOWN' : 'UP';
+  console.log(`[ADMIN] Toggled ${name} to ${svc.status}`);
+  res.json(svc);
 });
 
 app.listen(PORT, () => {
