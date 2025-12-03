@@ -42,6 +42,18 @@ if (SERVICE_NAME === 'tickets') {
     db.tickets.push(t);
     res.json(t);
   });
+  app.delete('/tickets/:id', (req, res) => {
+    const { id } = req.params;
+    // Filter out the ticket with the matching ID
+    const initialLength = db.tickets.length;
+    db.tickets = db.tickets.filter(t => t.id !== id);
+    
+    if (db.tickets.length < initialLength) {
+        res.json({ success: true, message: "Deleted" });
+    } else {
+        res.status(404).json({ error: "Ticket not found" });
+    }
+  });
   app.post('/tickets/:id/pickup', (req, res) => {
     const t = db.tickets.find(x => x.id === req.params.id);
     if (t) {
