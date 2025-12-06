@@ -21,11 +21,6 @@ let services = {
     status: "DOWN",
     lastSeen: null
   },
-   reporting: {
-        url: 'https://s6-reporting.onrender.com', 
-        status: 'UP',
-        lastSeen: nulll
-    },
   board: {
     url: "https://s3-board.onrender.com",
     status: "DOWN",
