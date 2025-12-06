@@ -105,19 +105,6 @@ if (SERVICE_NAME === "counseling") {
   });
 }
 
-if (SERVICE_NAME === 'reporting') {
-    app.get('/reports/tickets', (req, res) => {
-        console.log("Generating Ticket Report...");
-        res.json({ 
-            service: 'Reporting', 
-            status: 'Operational', 
-            uptime: '99.9%',
-            message: 'Report data simulated for demo.'
-        });
-    });
-    app.get('/', (req, res) => res.send('S6 Reporting Service is Online.'));
-}
-
 // --- SELF-REGISTRATION ---
 
 const registerSelf = async () => {
@@ -138,4 +125,3 @@ app.listen(PORT, () => {
   console.log(`${SERVICE_NAME} running on port ${PORT}`);
   registerSelf();
 });
-
